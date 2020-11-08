@@ -18,7 +18,17 @@ Summary:	Qt %{major} Tools
 BuildRequires:	cmake
 BuildRequires:	ninja
 BuildRequires:	%{_lib}Qt6Core-devel
+BuildRequires:	%{_lib}Qt6Gui-devel
+BuildRequires:	%{_lib}Qt6Widgets-devel
+BuildRequires:	%{_lib}Qt6Xml-devel
 BuildRequires:	%{_lib}Qt6Qml-devel
+BuildRequires:	%{_lib}Qt6OpenGL-devel
+BuildRequires:	qt%{major}-cmake
+BuildRequires:	pkgconfig(zlib)
+BuildRequires:	cmake(OpenGL)
+BuildRequires:	pkgconfig(gl)
+BuildRequires:	pkgconfig(xkbcommon)
+BuildRequires:	pkgconfig(vulkan)
 License:	LGPLv3/GPLv3/GPLv2
 
 %description
