@@ -5,7 +5,7 @@
 %define _qtdir %{_libdir}/qt%{major}
 
 Name:		qt6-qtsvg
-Version:	6.0.0
+Version:	6.0.1
 Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
@@ -17,7 +17,7 @@ Group:		System/Libraries
 Summary:	Qt %{major} Tools
 BuildRequires:	cmake
 BuildRequires:	ninja
-BuildRequires:	%{_lib}Qt6Core-devel
+BuildRequires:	%{_lib}Qt6Core-devel >= %{version}-0
 BuildRequires:	%{_lib}Qt6Gui-devel
 BuildRequires:	%{_lib}Qt6Widgets-devel
 BuildRequires:	%{_lib}Qt6Xml-devel
