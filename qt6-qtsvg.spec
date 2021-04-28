@@ -1,11 +1,16 @@
-#define beta rc2
+%define beta rc
 #define snapshot 20200627
 %define major 6
 
 %define _qtdir %{_libdir}/qt%{major}
 
+%define libcore %mklibname Qt%{major}Svg %{major}
+%define devcore %mklibname -d Qt%{major}Svg
+%define libwidgets %mklibname Qt%{major}SvgWidgets %{major}
+%define devwidgets %mklibname -d Qt%{major}SvgWidgets
+
 Name:		qt6-qtsvg
-Version:	6.0.1
+Version:	6.1.0
 Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
@@ -33,6 +38,43 @@ License:	LGPLv3/GPLv3/GPLv2
 
 %description
 Qt %{major} SVG library
+
+%package -n %{libcore}
+Summary:	Qt %{major} SVG rendering library
+Group:		System/Libraries
+
+%description -n %{libcore}
+Qt %{major} SVG rendering library
+
+%package -n %{devcore}
+Summary:	Development files for the Qt %{major} SVG rendering library
+Group:		System/Libraries
+Requires:	%{libcore} = %{EVRD}
+
+%description -n %{devcore}
+Development files for the Qt %{major} SVG rendering library
+
+%package -n %{libwidgets}
+Summary:	Qt %{major} SVG rendering library
+Group:		System/Libraries
+
+%description -n %{libwidgets}
+Qt %{major} SVG rendering library
+
+%package -n %{devwidgets}
+Summary:	Development files for the Qt %{major} SVG rendering library
+Group:		System/Libraries
+Requires:	%{libwidgets} = %{EVRD}
+
+%description -n %{devwidgets}
+Development files for the Qt %{major} SVG rendering library
+
+%package examples
+Summary:	Example code for the Qt 6 SVG module
+Group:		Documentation
+
+%description examples
+Example code for the Qt 6 SVG module
 
 %prep
 %autosetup -p1 -n qtsvg%{!?snapshot:-everywhere-src-%{version}%{?beta:-%{beta}}}
@@ -62,33 +104,42 @@ for i in %{buildroot}%{_qtdir}/lib/cmake/*; do
 	ln -s ../qt%{major}/lib/cmake/$(basename ${i}) %{buildroot}%{_libdir}/cmake/
 done
 
-%files
-%{_libdir}/cmake/Qt%{major}BuildInternals
-%{_libdir}/cmake/Qt%{major}Gui
-%{_libdir}/cmake/Qt%{major}Svg
-%{_libdir}/cmake/Qt%{major}SvgWidgets
-%{_libdir}/libQt%{major}Svg.so
-%{_libdir}/libQt%{major}Svg.so.%{major}*
-%{_libdir}/libQt%{major}SvgWidgets.so
-%{_libdir}/libQt%{major}SvgWidgets.so.%{major}*
-%{_qtdir}/include/QtSvg
-%{_qtdir}/include/QtSvgWidgets
-%{_qtdir}/lib/cmake/Qt%{major}BuildInternals/StandaloneTests/QtSvgTestsConfig.cmake
-%{_qtdir}/lib/cmake/Qt%{major}Svg
-%{_qtdir}/lib/cmake/Qt%{major}SvgWidgets
-%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgIconPlugin*.cmake
-%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgPlugin*.cmake
-%{_qtdir}/lib/libQt%{major}Svg.prl
-%{_qtdir}/lib/libQt%{major}Svg.so
+%files -n %{libcore}
 %{_qtdir}/lib/libQt%{major}Svg.so.%{major}*
-%{_qtdir}/lib/libQt%{major}SvgWidgets.prl
-%{_qtdir}/lib/libQt%{major}SvgWidgets.so
-%{_qtdir}/lib/libQt%{major}SvgWidgets.so.%{major}*
-%{_qtdir}/mkspecs/modules/qt_lib_svg.pri
-%{_qtdir}/mkspecs/modules/qt_lib_svg_private.pri
-%{_qtdir}/mkspecs/modules/qt_lib_svgwidgets.pri
-%{_qtdir}/mkspecs/modules/qt_lib_svgwidgets_private.pri
-%{_qtdir}/modules/Svg.json
-%{_qtdir}/modules/SvgWidgets.json
+%{_libdir}/libQt%{major}Svg.so.%{major}*
 %{_qtdir}/plugins/iconengines/libqsvgicon.so
 %{_qtdir}/plugins/imageformats/libqsvg.so
+
+%files -n %{devcore}
+%{_qtdir}/include/QtSvg
+%{_qtdir}/modules/Svg.json
+%{_qtdir}/lib/libQt%{major}Svg.prl
+%{_qtdir}/lib/libQt%{major}Svg.so
+%{_libdir}/libQt%{major}Svg.so
+%{_libdir}/cmake/Qt%{major}BuildInternals
+%{_libdir}/cmake/Qt%{major}Svg
+%{_libdir}/cmake/Qt%{major}Gui
+%{_qtdir}/lib/cmake/Qt%{major}BuildInternals/StandaloneTests/QtSvgTestsConfig.cmake
+%{_qtdir}/lib/cmake/Qt%{major}Svg
+%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgIconPlugin*.cmake
+%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgPlugin*.cmake
+%{_qtdir}/mkspecs/modules/qt_lib_svg.pri
+%{_qtdir}/mkspecs/modules/qt_lib_svg_private.pri
+
+%files -n %{libwidgets}
+%{_qtdir}/lib/libQt%{major}SvgWidgets.so.%{major}*
+%{_libdir}/libQt%{major}SvgWidgets.so.%{major}*
+
+%files -n %{devwidgets}
+%{_qtdir}/include/QtSvgWidgets
+%{_qtdir}/modules/SvgWidgets.json
+%{_qtdir}/lib/libQt%{major}SvgWidgets.prl
+%{_qtdir}/lib/libQt%{major}SvgWidgets.so
+%{_libdir}/cmake/Qt%{major}SvgWidgets
+%{_qtdir}/lib/cmake/Qt%{major}SvgWidgets
+%{_libdir}/libQt%{major}SvgWidgets.so
+%{_qtdir}/mkspecs/modules/qt_lib_svgwidgets.pri
+%{_qtdir}/mkspecs/modules/qt_lib_svgwidgets_private.pri
+
+%files examples
+%{_qtdir}/examples
