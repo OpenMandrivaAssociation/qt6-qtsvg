@@ -11,7 +11,7 @@
 
 Name:		qt6-qtsvg
 Version:	6.1.0
-Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
+Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}2
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
 Source:		qtsvg-%{?snapshot:%{snapshot}}%{!?snapshot:%{version}}.tar.zst
@@ -100,9 +100,7 @@ mkdir -p %{buildroot}%{_bindir} %{buildroot}%{_libdir}/cmake
 for i in %{buildroot}%{_qtdir}/lib/*.so*; do
 	ln -s qt%{major}/lib/$(basename ${i}) %{buildroot}%{_libdir}/
 done
-for i in %{buildroot}%{_qtdir}/lib/cmake/*; do
-	ln -s ../qt%{major}/lib/cmake/$(basename ${i}) %{buildroot}%{_libdir}/cmake/
-done
+mv %{buildroot}%{_qtdir}/lib/cmake %{buildroot}%{_libdir}
 
 %files -n %{libcore}
 %{_qtdir}/lib/libQt%{major}Svg.so.%{major}*
@@ -116,13 +114,10 @@ done
 %{_qtdir}/lib/libQt%{major}Svg.prl
 %{_qtdir}/lib/libQt%{major}Svg.so
 %{_libdir}/libQt%{major}Svg.so
-%{_libdir}/cmake/Qt%{major}BuildInternals
+%{_libdir}/cmake/Qt%{major}BuildInternals/StandaloneTests/QtSvgTestsConfig.cmake
 %{_libdir}/cmake/Qt%{major}Svg
-%{_libdir}/cmake/Qt%{major}Gui
-%{_qtdir}/lib/cmake/Qt%{major}BuildInternals/StandaloneTests/QtSvgTestsConfig.cmake
-%{_qtdir}/lib/cmake/Qt%{major}Svg
-%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgIconPlugin*.cmake
-%{_qtdir}/lib/cmake/Qt%{major}Gui/Qt6QSvgPlugin*.cmake
+%{_libdir}/cmake/Qt%{major}Gui/Qt6QSvgIconPlugin*.cmake
+%{_libdir}/cmake/Qt%{major}Gui/Qt6QSvgPlugin*.cmake
 %{_qtdir}/mkspecs/modules/qt_lib_svg.pri
 %{_qtdir}/mkspecs/modules/qt_lib_svg_private.pri
 
@@ -136,7 +131,6 @@ done
 %{_qtdir}/lib/libQt%{major}SvgWidgets.prl
 %{_qtdir}/lib/libQt%{major}SvgWidgets.so
 %{_libdir}/cmake/Qt%{major}SvgWidgets
-%{_qtdir}/lib/cmake/Qt%{major}SvgWidgets
 %{_libdir}/libQt%{major}SvgWidgets.so
 %{_qtdir}/mkspecs/modules/qt_lib_svgwidgets.pri
 %{_qtdir}/mkspecs/modules/qt_lib_svgwidgets_private.pri
