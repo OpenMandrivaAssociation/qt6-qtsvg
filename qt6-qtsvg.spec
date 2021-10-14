@@ -118,6 +118,7 @@ mv %{buildroot}%{_qtdir}/lib/cmake %{buildroot}%{_libdir}
 %{_libdir}/cmake/Qt%{major}Svg
 %{_libdir}/cmake/Qt%{major}Gui/Qt6QSvgIconPlugin*.cmake
 %{_libdir}/cmake/Qt%{major}Gui/Qt6QSvgPlugin*.cmake
+%{_qtdir}/lib/metatypes/qt6svg_relwithdebinfo_metatypes.json
 %{_qtdir}/mkspecs/modules/qt_lib_svg.pri
 %{_qtdir}/mkspecs/modules/qt_lib_svg_private.pri
 
@@ -134,6 +135,7 @@ mv %{buildroot}%{_qtdir}/lib/cmake %{buildroot}%{_libdir}
 %{_libdir}/libQt%{major}SvgWidgets.so
 %{_qtdir}/mkspecs/modules/qt_lib_svgwidgets.pri
 %{_qtdir}/mkspecs/modules/qt_lib_svgwidgets_private.pri
-
+%{_qtdir}/lib/metatypes/qt6svgwidgets_relwithdebinfo_metatypes.json
+   
 %files examples
 %{_qtdir}/examples
