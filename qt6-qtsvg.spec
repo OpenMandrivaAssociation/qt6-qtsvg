@@ -24,6 +24,7 @@ BuildRequires:	cmake
 BuildRequires:	ninja
 BuildRequires:	%{_lib}Qt6Core-devel >= %{version}-0
 BuildRequires:	%{_lib}Qt6Gui-devel
+BuildRequires:	%{_lib}Qt6DBus-devel
 BuildRequires:	%{_lib}Qt6Widgets-devel
 BuildRequires:	%{_lib}Qt6Xml-devel
 BuildRequires:	%{_lib}Qt6Qml-devel
