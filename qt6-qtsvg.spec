@@ -1,4 +1,4 @@
-#define beta rc
+%define beta rc
 #define snapshot 20200627
 %define major 6
 
@@ -10,7 +10,7 @@
 %define devwidgets %mklibname -d Qt%{major}SvgWidgets
 
 Name:		qt6-qtsvg
-Version:	6.2.3
+Version:	6.3.0
 Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
@@ -83,6 +83,7 @@ Example code for the Qt 6 SVG module
 # /usr/lib over /usr/lib64 even on 64-bit boxes?
 %cmake -G Ninja \
 	-DCMAKE_INSTALL_PREFIX=%{_qtdir} \
+	-DQT_MKSPECS_DIR:FILEPATH=%{_qtdir}/mkspecs \
 	-DQT_BUILD_EXAMPLES:BOOL=ON \
 	-DQT_WILL_INSTALL:BOOL=ON
 
