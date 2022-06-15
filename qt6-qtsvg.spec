@@ -1,5 +1,5 @@
 Name:		qt6-qtsvg
-Version:	6.3.0
+Version:	6.3.1
 Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
@@ -34,7 +34,6 @@ Qt %{qtmajor} SVG library
 %{_qtdir}/plugins/imageformats/libqsvg.so
 
 %define extra_devel_files_Svg \
-%{_qtdir}/lib/cmake/Qt6BuildInternals/StandaloneTests/QtSvgTestsConfig.cmake \
 %{_qtdir}/lib/cmake/Qt6Gui/Qt6QSvg*.cmake
 
 %qt6libs Svg SvgWidgets
