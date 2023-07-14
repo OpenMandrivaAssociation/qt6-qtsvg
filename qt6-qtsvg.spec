@@ -64,5 +64,5 @@ export LD_LIBRARY_PATH="$(pwd)/build/lib:${LD_LIBRARY_PATH}"
 %ninja_install -C build
 %qt6_postinstall
 
-%files examples
-%{_qtdir}/examples
+#files examples
+#{_qtdir}/examples
