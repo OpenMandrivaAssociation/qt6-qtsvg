@@ -1,0 +1,562 @@
+From a7a08b157e4d63603b4dd4cf1b3a79a825a37108 Mon Sep 17 00:00:00 2001
+From: Matthias Rauter <matthias.rauter@qt.io>
+Date: Tue, 18 Jul 2023 12:59:27 +0200
+Subject: [PATCH 54/81] Add selectable featureSet to all QSvg classes
+
+In preparation of adding additional svg elements, that go beyond the Tiny
+1.2 standard, a member variable and respective getters and setters are
+added to all relevant classes to let the application developers decide
+which SVG features they want to be parsed.
+
+Task-number: QTBUG-115223
+Change-Id: Ia862548de815ca67e3ae8939141dc60f31696bb2
+Reviewed-by: Volker Hilsheimer <volker.hilsheimer@qt.io>
+---
+ src/svg/doc/src/qsvgglobal.qdoc     | 24 +++++++++++++++++
+ src/svg/qsvghandler.cpp             | 40 +++++++++++++++++++----------
+ src/svg/qsvghandler_p.h             | 10 +++++---
+ src/svg/qsvgnode_p.h                | 14 +++++++++-
+ src/svg/qsvgrenderer.cpp            | 29 +++++++++++++++++++--
+ src/svg/qsvgrenderer.h              |  4 +++
+ src/svg/qsvgtinydocument.cpp        | 20 ++++++++++-----
+ src/svg/qsvgtinydocument_p.h        | 12 ++++++---
+ src/svg/qtsvgglobal.h               | 14 ++++++++++
+ src/svg/qtsvgglobal_p.h             | 14 ++++++++++
+ src/svgwidgets/qsvgwidget.cpp       | 31 ++++++++++++++++++++++
+ src/svgwidgets/qsvgwidget.h         |  3 +++
+ src/svgwidgets/qtsvgwidgetsglobal.h |  1 +
+ 13 files changed, 186 insertions(+), 30 deletions(-)
+ create mode 100644 src/svg/doc/src/qsvgglobal.qdoc
+
+diff --git a/src/svg/doc/src/qsvgglobal.qdoc b/src/svg/doc/src/qsvgglobal.qdoc
+new file mode 100644
+index 0000000..afee1d4
+--- /dev/null
++++ b/src/svg/doc/src/qsvgglobal.qdoc
+@@ -0,0 +1,24 @@
++// Copyright (C) 2023 The Qt Company Ltd.
++// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
++
++/*!
++    \namespace QSvg
++    \brief The QSvg namespace contains enums used by the svg classes.
++    \inmodule QtSvg
++*/
++
++/*!
++    \enum QSvg::FeatureSet
++
++    This enum is used to control the parsing and renderering of features
++    that go beyond the \l{http://www.w3.org/TR/SVGMobile12}{SVG 1.2 Tiny}
++    standard.
++
++    The following feature sets are available for the
++    renderer.
++
++    \value StaticTiny1_2    Strictly and exclusivly parse only tags that are part
++                            of the SVG 1.2 Tiny Static Feature set.
++    \value AllAvailable     Parses the extra features supported by the renderer
++                            from the SVG 1.1 standard.
++*/
+diff --git a/src/svg/qsvghandler.cpp b/src/svg/qsvghandler.cpp
+index c47a2ea..e6877ac 100644
+--- a/src/svg/qsvghandler.cpp
++++ b/src/svg/qsvghandler.cpp
+@@ -2013,6 +2013,11 @@ void QSvgHandler::parseCSStoXMLAttrs(const QString &css, QList<QSvgCssAttribute>
+     }
+ }
+ 
++QSvg::FeatureSet QSvgHandler::featureSet() const
++{
++    return m_featureSet;
++}
++
+ static void cssStyleLookup(QSvgNode *node,
+                            QSvgHandler *handler,
+                            QSvgStyleSelector *selector,
+@@ -3214,7 +3219,7 @@ static QSvgNode *createSvgNode(QSvgNode *parent,
+ {
+     Q_UNUSED(parent); Q_UNUSED(attributes);
+ 
+-    QSvgTinyDocument *node = new QSvgTinyDocument();
++    QSvgTinyDocument *node = new QSvgTinyDocument(handler->featureSet());
+     const QStringView widthStr  = attributes.value(QLatin1String("width"));
+     const QStringView heightStr = attributes.value(QLatin1String("height"));
+     QString viewBoxStr = attributes.value(QLatin1String("viewBox")).toString();
+@@ -3394,8 +3399,9 @@ static QSvgNode *createVideoNode(QSvgNode *parent,
+ 
+ typedef QSvgNode *(*FactoryMethod)(QSvgNode *, const QXmlStreamAttributes &, QSvgHandler *);
+ 
+-static FactoryMethod findGroupFactory(const QString &name)
++static FactoryMethod findGroupFactory(const QString &name, QSvg::FeatureSet featureSet)
+ {
++    Q_UNUSED(featureSet);
+     if (name.isEmpty())
+         return 0;
+ 
+@@ -3417,8 +3423,9 @@ static FactoryMethod findGroupFactory(const QString &name)
+     return 0;
+ }
+ 
+-static FactoryMethod findGraphicsFactory(const QString &name)
++static FactoryMethod findGraphicsFactory(const QString &name, QSvg::FeatureSet featureSet)
+ {
++    Q_UNUSED(featureSet);
+     if (name.isEmpty())
+         return 0;
+ 
+@@ -3466,8 +3473,9 @@ static FactoryMethod findGraphicsFactory(const QString &name)
+ 
+ typedef bool (*ParseMethod)(QSvgNode *, const QXmlStreamAttributes &, QSvgHandler *);
+ 
+-static ParseMethod findUtilFactory(const QString &name)
++static ParseMethod findUtilFactory(const QString &name, QSvg::FeatureSet featureSet)
+ {
++    Q_UNUSED(featureSet);
+     if (name.isEmpty())
+         return 0;
+ 
+@@ -3575,20 +3583,26 @@ static StyleParseMethod findStyleUtilFactoryMethod(const QString &name)
+     return 0;
+ }
+ 
+-QSvgHandler::QSvgHandler(QIODevice *device) : xml(new QXmlStreamReader(device))
+-                                             , m_ownsReader(true)
++QSvgHandler::QSvgHandler(QIODevice *device, QSvg::FeatureSet featureSet)
++    : xml(new QXmlStreamReader(device))
++    , m_ownsReader(true)
++    , m_featureSet(featureSet)
+ {
+     init();
+ }
+ 
+-QSvgHandler::QSvgHandler(const QByteArray &data) : xml(new QXmlStreamReader(data))
+-                                                 , m_ownsReader(true)
++QSvgHandler::QSvgHandler(const QByteArray &data, QSvg::FeatureSet featureSet)
++    : xml(new QXmlStreamReader(data))
++    , m_ownsReader(true)
++    , m_featureSet(featureSet)
+ {
+     init();
+ }
+ 
+-QSvgHandler::QSvgHandler(QXmlStreamReader *const reader) : xml(reader)
+-                                                         , m_ownsReader(false)
++QSvgHandler::QSvgHandler(QXmlStreamReader *const reader, QSvg::FeatureSet featureSet)
++    : xml(reader)
++    , m_ownsReader(false)
++    , m_featureSet(featureSet)
+ {
+     init();
+ }
+@@ -3723,7 +3737,7 @@ bool QSvgHandler::startElement(const QString &localName,
+     if (!m_doc && localName != QLatin1String("svg"))
+         return false;
+ 
+-    if (FactoryMethod method = findGroupFactory(localName)) {
++    if (FactoryMethod method = findGroupFactory(localName, featureSet())) {
+         //group
+         node = method(m_doc ? m_nodes.top() : 0, attributes, this);
+         Q_ASSERT(node);
+@@ -3757,7 +3771,7 @@ bool QSvgHandler::startElement(const QString &localName,
+ #endif
+             parseStyle(node, attributes, this);
+         }
+-    } else if (FactoryMethod method = findGraphicsFactory(localName)) {
++    } else if (FactoryMethod method = findGraphicsFactory(localName, featureSet())) {
+         //rendering element
+         Q_ASSERT(!m_nodes.isEmpty());
+         node = method(m_nodes.top(), attributes, this);
+@@ -3816,7 +3830,7 @@ bool QSvgHandler::startElement(const QString &localName,
+                 }
+             }
+         }
+-    } else if (ParseMethod method = findUtilFactory(localName)) {
++    } else if (ParseMethod method = findUtilFactory(localName, featureSet())) {
+         Q_ASSERT(!m_nodes.isEmpty());
+         if (!method(m_nodes.top(), attributes, this))
+             qCWarning(lcSvgHandler, "%s", msgProblemParsing(localName, xml).constData());
+diff --git a/src/svg/qsvghandler_p.h b/src/svg/qsvghandler_p.h
+index ac24e16..00e3b02 100644
+--- a/src/svg/qsvghandler_p.h
++++ b/src/svg/qsvghandler_p.h
+@@ -59,9 +59,9 @@ public:
+     };
+ 
+ public:
+-    QSvgHandler(QIODevice *device);
+-    QSvgHandler(const QByteArray &data);
+-    QSvgHandler(QXmlStreamReader *const data);
++    QSvgHandler(QIODevice *device, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
++    QSvgHandler(const QByteArray &data, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
++    QSvgHandler(QXmlStreamReader *const data, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
+     ~QSvgHandler();
+ 
+     QIODevice *device() const;
+@@ -99,6 +99,8 @@ public:
+     inline QPen defaultPen() const
+     { return m_defaultPen; }
+ 
++    QSvg::FeatureSet featureSet() const;
++
+ public:
+     bool startElement(const QString &localName, const QXmlStreamAttributes &attributes);
+     bool endElement(QStringView localName);
+@@ -153,6 +155,8 @@ private:
+      * we need to delete it.
+      */
+     const bool m_ownsReader;
++
++    const QSvg::FeatureSet m_featureSet;
+ };
+ 
+ Q_DECLARE_LOGGING_CATEGORY(lcSvgHandler)
+diff --git a/src/svg/qsvgnode_p.h b/src/svg/qsvgnode_p.h
+index df9ef8a..df1341b 100644
+--- a/src/svg/qsvgnode_p.h
++++ b/src/svg/qsvgnode_p.h
+@@ -49,7 +49,19 @@ public:
+         TEXTAREA,
+         TSPAN,
+         USE,
+-        VIDEO
++        VIDEO,
++        MASK,
++        SYMBOL,
++        MARKER,
++        PATTERN,
++        FILTER,
++        FEMERGE,
++        FEMERGENODE,
++        FECOLORMATRIX,
++        FEGAUSSIANBLUR,
++        FEOFFSET,
++        FECOMPOSITE,
++        FEFLOOD
+     };
+     enum DisplayMode {
+         InlineMode,
+diff --git a/src/svg/qsvgrenderer.cpp b/src/svg/qsvgrenderer.cpp
+index 863951a..b607442 100644
+--- a/src/svg/qsvgrenderer.cpp
++++ b/src/svg/qsvgrenderer.cpp
+@@ -72,8 +72,10 @@ public:
+     explicit QSvgRendererPrivate()
+         : QObjectPrivate(),
+           render(0), timer(0),
+-          fps(30)
++          fps(30),
++          featureSet(QSvg::FeatureSet::AllAvailable)
+     {}
++
+     ~QSvgRendererPrivate()
+     {
+         delete render;
+@@ -84,6 +86,7 @@ public:
+     QSvgTinyDocument *render;
+     QTimer *timer;
+     int fps;
++    QSvg::FeatureSet featureSet;
+ };
+ 
+ /*!
+@@ -255,6 +258,28 @@ void QSvgRenderer::setAspectRatioMode(Qt::AspectRatioMode mode)
+     }
+ }
+ 
++/*!
++    \property QSvgRenderer::featureSet
++    \since 6.7
++
++    This property holds the feature set that will be used to load and
++    render an SVG file. Set this propety before calling any of the load
++    functions to change the behavior of the QSvgRenderer.
++
++    The default value is QSvg::AllAvailable.
++ */
++QSvg::FeatureSet QSvgRenderer::featureSet() const
++{
++    Q_D(const QSvgRenderer);
++    return d->featureSet;
++}
++
++
++void QSvgRenderer::setFeatureSet(QSvg::FeatureSet flags)
++{
++    Q_D(QSvgRenderer);
++    d->featureSet = flags;
++}
+ /*!
+   \property QSvgRenderer::currentFrame
+   \brief the current frame of the document's animation, or 0 if the document is not animated
+@@ -313,7 +338,7 @@ static bool loadDocument(QSvgRenderer *const q,
+                          const TInputType &in)
+ {
+     delete d->render;
+-    d->render = QSvgTinyDocument::load(in);
++    d->render = QSvgTinyDocument::load(in, d->featureSet);
+     if (d->render && !d->render->size().isValid()) {
+         delete d->render;
+         d->render = nullptr;
+diff --git a/src/svg/qsvgrenderer.h b/src/svg/qsvgrenderer.h
+index e5610e5..4bc2b25 100644
+--- a/src/svg/qsvgrenderer.h
++++ b/src/svg/qsvgrenderer.h
+@@ -28,6 +28,7 @@ class Q_SVG_EXPORT QSvgRenderer : public QObject
+     Q_PROPERTY(int framesPerSecond READ framesPerSecond WRITE setFramesPerSecond)
+     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame)
+     Q_PROPERTY(Qt::AspectRatioMode aspectRatioMode READ aspectRatioMode WRITE setAspectRatioMode)
++    Q_PROPERTY(QSvg::FeatureSet featureSet READ featureSet WRITE setFeatureSet)
+ public:
+     QSvgRenderer(QObject *parent = nullptr);
+     QSvgRenderer(const QString &filename, QObject *parent = nullptr);
+@@ -47,6 +48,9 @@ public:
+     Qt::AspectRatioMode aspectRatioMode() const;
+     void setAspectRatioMode(Qt::AspectRatioMode mode);
+ 
++    QSvg::FeatureSet featureSet() const;
++    void setFeatureSet(QSvg::FeatureSet flags);
++
+     bool animated() const;
+     int framesPerSecond() const;
+     void setFramesPerSecond(int num);
+diff --git a/src/svg/qsvgtinydocument.cpp b/src/svg/qsvgtinydocument.cpp
+index 176ff3c..b548d19 100644
+--- a/src/svg/qsvgtinydocument.cpp
++++ b/src/svg/qsvgtinydocument.cpp
+@@ -21,7 +21,7 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
+-QSvgTinyDocument::QSvgTinyDocument()
++QSvgTinyDocument::QSvgTinyDocument(QSvg::FeatureSet featureSet)
+     : QSvgStructureNode(0)
+     , m_widthPercent(false)
+     , m_heightPercent(false)
+@@ -29,6 +29,7 @@ QSvgTinyDocument::QSvgTinyDocument()
+     , m_animated(false)
+     , m_animationDuration(0)
+     , m_fps(30)
++    , m_featureSet(featureSet)
+ {
+ }
+ 
+@@ -152,7 +153,7 @@ static QByteArray qt_inflateSvgzDataFrom(QIODevice *)
+ }
+ #endif
+ 
+-QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
++QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName, QSvg::FeatureSet featureSet)
+ {
+     QFile file(fileName);
+     if (!file.open(QFile::ReadOnly)) {
+@@ -167,7 +168,7 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
+     }
+ 
+     QSvgTinyDocument *doc = nullptr;
+-    QSvgHandler handler(&file);
++    QSvgHandler handler(&file, featureSet);
+     if (handler.ok()) {
+         doc = handler.document();
+         doc->m_animationDuration = handler.animationDuration();
+@@ -179,7 +180,7 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QString &fileName)
+     return doc;
+ }
+ 
+-QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
++QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents, QSvg::FeatureSet featureSet)
+ {
+     QByteArray svg;
+     // Check for gzip magic number and inflate if appropriate
+@@ -196,7 +197,7 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
+     QBuffer buffer;
+     buffer.setData(svg);
+     buffer.open(QIODevice::ReadOnly);
+-    QSvgHandler handler(&buffer);
++    QSvgHandler handler(&buffer, featureSet );
+ 
+     QSvgTinyDocument *doc = nullptr;
+     if (handler.ok()) {
+@@ -208,9 +209,9 @@ QSvgTinyDocument * QSvgTinyDocument::load(const QByteArray &contents)
+     return doc;
+ }
+ 
+-QSvgTinyDocument * QSvgTinyDocument::load(QXmlStreamReader *contents)
++QSvgTinyDocument * QSvgTinyDocument::load(QXmlStreamReader *contents, QSvg::FeatureSet featureSet)
+ {
+-    QSvgHandler handler(contents);
++    QSvgHandler handler(contents, featureSet);
+ 
+     QSvgTinyDocument *doc = nullptr;
+     if (handler.ok()) {
+@@ -339,6 +340,11 @@ void QSvgTinyDocument::setViewBox(const QRectF &rect)
+     m_implicitViewBox = rect.isNull();
+ }
+ 
++QSvg::FeatureSet QSvgTinyDocument::featureSet() const
++{
++    return m_featureSet;
++}
++
+ void QSvgTinyDocument::addSvgFont(QSvgFont *font)
+ {
+     m_fonts.insert(font->familyName(), font);
+diff --git a/src/svg/qsvgtinydocument_p.h b/src/svg/qsvgtinydocument_p.h
+index 99984f5..7f0a9af 100644
+--- a/src/svg/qsvgtinydocument_p.h
++++ b/src/svg/qsvgtinydocument_p.h
+@@ -36,11 +36,11 @@ class QTransform;
+ class Q_SVG_PRIVATE_EXPORT QSvgTinyDocument : public QSvgStructureNode
+ {
+ public:
+-    static QSvgTinyDocument * load(const QString &file);
+-    static QSvgTinyDocument * load(const QByteArray &contents);
+-    static QSvgTinyDocument * load(QXmlStreamReader *contents);
++    static QSvgTinyDocument * load(const QString &file, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
++    static QSvgTinyDocument * load(const QByteArray &contents, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
++    static QSvgTinyDocument * load(QXmlStreamReader *contents, QSvg::FeatureSet featureSet = QSvg::FeatureSet::AllAvailable);
+ public:
+-    QSvgTinyDocument();
++    QSvgTinyDocument(QSvg::FeatureSet featureSet);
+     ~QSvgTinyDocument();
+     Type type() const override;
+ 
+@@ -58,6 +58,8 @@ public:
+     QRectF viewBox() const;
+     void setViewBox(const QRectF &rect);
+ 
++    QSvg::FeatureSet featureSet() const;
++
+     void draw(QPainter *p, QSvgExtraStates &) override; //from the QSvgNode
+ 
+     void draw(QPainter *p);
+@@ -105,6 +107,8 @@ private:
+     int   m_fps;
+ 
+     QSvgExtraStates m_states;
++
++    const QSvg::FeatureSet m_featureSet;
+ };
+ 
+ inline QSize QSvgTinyDocument::size() const
+diff --git a/src/svg/qtsvgglobal.h b/src/svg/qtsvgglobal.h
+index 985a7aa..c67f07d 100644
+--- a/src/svg/qtsvgglobal.h
++++ b/src/svg/qtsvgglobal.h
+@@ -1,4 +1,5 @@
+ // Copyright (C) 2016 Intel Corporation.
++// Copyright (C) 2023 The Qt Company Ltd.
+ // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+ 
+ #ifndef QTSVGGLOBAL_H
+@@ -7,4 +8,17 @@
+ #include <QtCore/qglobal.h>
+ #include <QtSvg/qtsvgexports.h>
+ 
++QT_BEGIN_NAMESPACE
++
++namespace QSvg {
++
++enum class FeatureSet : quint32{
++    StaticTiny1_2,
++    AllAvailable
++};
++
++}
++
++QT_END_NAMESPACE
++
+ #endif
+diff --git a/src/svg/qtsvgglobal_p.h b/src/svg/qtsvgglobal_p.h
+index f82ee60..b8f6a04 100644
+--- a/src/svg/qtsvgglobal_p.h
++++ b/src/svg/qtsvgglobal_p.h
+@@ -18,4 +18,18 @@
+ #include "qtsvgglobal.h"
+ #include <QtSvg/private/qtsvgexports_p.h>
+ 
++QT_BEGIN_NAMESPACE
++
++namespace QSvg {
++
++enum class UnitTypes : quint32 {
++    unknown,
++    objectBoundingBox,
++    userSpaceOnUse
++};
++
++}
++
++QT_END_NAMESPACE
++
+ #endif // QTSVGGLOBAL_P_H
+diff --git a/src/svgwidgets/qsvgwidget.cpp b/src/svgwidgets/qsvgwidget.cpp
+index a57bf04..19b3a44 100644
+--- a/src/svgwidgets/qsvgwidget.cpp
++++ b/src/svgwidgets/qsvgwidget.cpp
+@@ -101,6 +101,37 @@ QSize QSvgWidget::sizeHint() const
+         return QSize(128, 64);
+ }
+ 
++/*!
++    \since 6.7
++
++    Returns the QSvg::FeatureSet of the widget's renderer.
++
++    \sa setFeatureSet
++ */
++QSvg::FeatureSet QSvgWidget::featureSet() const
++{
++    Q_D(const QSvgWidget);
++    return d->renderer->featureSet();
++}
++
++/*!
++    \since 6.7
++
++    Sets the widget's renderer QSvg::FeatureSet to \a featureSet.
++
++    If this function is used to set the QSvg::FeatureSet, it will
++    control how QSvgWidget::loadrenderer is going to load the SVG file.
++
++    The default value of QSvg::FeatureSet in the renderer is
++    QSvg::AllAvailable.
++
++    \sa featureSet
++ */
++void QSvgWidget::setFeatureSet(QSvg::FeatureSet featureSet)
++{
++    Q_D(QSvgWidget);
++    d->renderer->setFeatureSet(featureSet);
++}
+ 
+ /*!
+     \reimp
+diff --git a/src/svgwidgets/qsvgwidget.h b/src/svgwidgets/qsvgwidget.h
+index 88cf452..a6e4bbf 100644
+--- a/src/svgwidgets/qsvgwidget.h
++++ b/src/svgwidgets/qsvgwidget.h
+@@ -26,6 +26,9 @@ public:
+     QSvgRenderer *renderer() const;
+ 
+     QSize sizeHint() const override;
++
++    QSvg::FeatureSet featureSet() const;
++    void setFeatureSet(QSvg::FeatureSet featureSet);
+ public Q_SLOTS:
+     void load(const QString &file);
+     void load(const QByteArray &contents);
+diff --git a/src/svgwidgets/qtsvgwidgetsglobal.h b/src/svgwidgets/qtsvgwidgetsglobal.h
+index 44a0bf8..db4c930 100644
+--- a/src/svgwidgets/qtsvgwidgetsglobal.h
++++ b/src/svgwidgets/qtsvgwidgetsglobal.h
+@@ -6,5 +6,6 @@
+ 
+ #include <QtCore/qglobal.h>
+ #include <QtSvgWidgets/qtsvgwidgetsexports.h>
++#include <QtSvg/qtsvgglobal.h>
+ 
+ #endif
+-- 
+2.42.1
+

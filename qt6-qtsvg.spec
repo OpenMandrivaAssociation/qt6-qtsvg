@@ -2,13 +2,29 @@
 
 Name:		qt6-qtsvg
 Version:	6.6.0
-Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
+Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}2
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
 Source:		qtsvg-%{?snapshot:%{snapshot}}%{!?snapshot:%{version}}.tar.zst
 %else
 Source:		http://download.qt-project.org/%{?beta:development}%{!?beta:official}_releases/qt/%(echo %{version}|cut -d. -f1-2)/%{version}%{?beta:-%{beta}}/submodules/qtsvg-everywhere-src-%{version}%{?beta:-%{beta}}.tar.xz
 %endif
+# Bugfixes from upstream master branch. Generated with
+# git format-patch v6.6.0, then picked relevant fixes
+# manually...
+Patch1:		0018-Build-with-QT_NO_CONTEXTLESS_CONNECT.patch
+Patch2:		0019-Build-with-QT_NO_CONTEXTLESS_CONNECT.patch
+Patch3:		0029-Support-display-none-for-Graphical-Nodes.patch
+Patch7:		0044-Add-Radial-Gradient-default-value.patch
+Patch10:	0054-Add-selectable-featureSet-to-all-QSvg-classes.patch
+Patch11:	0060-Change-Axivion-configuration.patch
+Patch12:	0063-Fix-nullptr-dereference-with-invalid-SVG.patch
+Patch13:	0064-Fix-crash-when-reading-text-with-line-breaks.patch
+Patch14:	0066-Make-sure-we-don-t-load-invalid-SVGs-twice.patch
+Patch15:	0067-Verify-that-loading-of-invalid-SVG-files-don-t-crash.patch
+Patch16:	0075-Private-API-for-iterating-over-QSvgTinyDocument.patch
+Patch17:	0078-Add-virtual-destructor-to-QSvgVisitor.patch
+Patch18:	0081-Refactor-QSvgNode-draw-architecture.patch
 Group:		System/Libraries
 Summary:	Qt %{qtmajor} Tools
 BuildRequires:	cmake

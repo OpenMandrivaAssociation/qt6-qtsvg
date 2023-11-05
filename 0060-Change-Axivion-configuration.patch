@@ -1,0 +1,61 @@
+From be71be8f6387768044f0005526e6c1a1065802e9 Mon Sep 17 00:00:00 2001
+From: Matti Paaso <matti.paaso@qt.io>
+Date: Tue, 5 Sep 2023 14:16:39 +0300
+Subject: [PATCH 60/81] Change Axivion configuration
+
+Change-Id: Ib8787a85ad6e0806a0522ce3a7868d97e781521e
+Reviewed-by: Jukka Jokiniva <jukka.jokiniva@qt.io>
+---
+ coin/axivion/ci_config_linux.json | 25 +++----------------------
+ 1 file changed, 3 insertions(+), 22 deletions(-)
+
+diff --git a/coin/axivion/ci_config_linux.json b/coin/axivion/ci_config_linux.json
+index 9e77ce3..1999760 100644
+--- a/coin/axivion/ci_config_linux.json
++++ b/coin/axivion/ci_config_linux.json
+@@ -1,9 +1,5 @@
+ {
+     "Project": {
+-        "Git": {
+-            "_active": true,
+-            "sourceserver_gitdir": "/data/axivion/databases/$(env:TESTED_MODULE_COIN).git"
+-        },
+         "BuildSystemIntegration": {
+             "child_order": [
+                 "GCCSetup",
+@@ -34,29 +30,14 @@
+             "plugin_files": [
+                 "build/plugins/*/lib*.so*.ir"
+             ]
+-        },
+-        "Project-GlobalOptions": {
+-            "directory": "../work/qt/$(env:TESTED_MODULE_COIN)",
+-            "ir": "build/$(env:TESTED_MODULE_COIN).ir",
+-            "name": "qt_$(env:TESTED_MODULE_COIN)_dev_$(env:TARGET_OS_COIN)"
+-        }
+-    },
+-    "Results": {
+-        "Dashboard": {
+-            "dashboard_url": "https://axivion-srv.ci.qt.io/axivion/"
+-        },
+-        "Database": {
+-            "ci_mode": {
+-                "directory": "/data/axivion/databases"
+-            }
+         }
+     },
+     "_Format": "1.0",
+-    "_Version": "trunk-9e0ef9c5818",
++    "_Version": "7.6.2",
+     "_VersionNum": [
+         7,
+         6,
+-        9999,
+-        11489
++        2,
++        12725
+     ]
+ }
+-- 
+2.42.1
+

@@ -1,0 +1,27 @@
+From 4806d340947cc452fd99f509cfee70aae14a549c Mon Sep 17 00:00:00 2001
+From: Paul Olav Tvete <paul.tvete@qt.io>
+Date: Tue, 31 Oct 2023 12:18:43 +0100
+Subject: [PATCH 78/81] Add virtual destructor to QSvgVisitor
+
+Change-Id: Ifde7e5365b10a106a069af593ca6e2b0ab6b191e
+Reviewed-by: Edward Welbourne <edward.welbourne@qt.io>
+---
+ src/svg/qsvgvisitor_p.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/svg/qsvgvisitor_p.h b/src/svg/qsvgvisitor_p.h
+index dccff1a..3fc93a5 100644
+--- a/src/svg/qsvgvisitor_p.h
++++ b/src/svg/qsvgvisitor_p.h
+@@ -25,6 +25,8 @@ QT_BEGIN_NAMESPACE
+ class Q_SVG_PRIVATE_EXPORT QSvgVisitor {
+ public:
+     void traverse(const QSvgStructureNode *node);
++    virtual ~QSvgVisitor() {}
++
+ protected:
+     virtual void visitNode(const QSvgNode *) {}
+     virtual bool visitStructureNodeStart(const QSvgStructureNode *node) { visitNode(node); return true; }
+-- 
+2.42.1
+

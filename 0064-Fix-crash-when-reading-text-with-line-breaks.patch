@@ -1,0 +1,81 @@
+From b7ca59454a2bc21894f0f4737d8b5885a6a4cc54 Mon Sep 17 00:00:00 2001
+From: Eskil Abrahamsen Blomfeldt <eskil.abrahamsen-blomfeldt@qt.io>
+Date: Thu, 12 Oct 2023 12:54:58 +0200
+Subject: [PATCH 64/81] Fix crash when reading text with line breaks
+
+Introduced by d130c74f4f54cddcd5baa7d8dc4c5b68772345c2, trying to read
+an svg with a line break in the text would crash, because nullptr is
+used as a token for linebreaks in Qt SVG and we were accessing it without
+checking.
+
+[ChangeLog] Fixed a regression where the application would
+crash on certain SVG files.
+
+Pick-to: 6.2 6.5 6.6
+Change-Id: Ia261372cd957a2ebcd49033a57d43ebd201c83bb
+Reviewed-by: Paul Olav Tvete <paul.tvete@qt.io>
+---
+ src/svg/qsvggraphics.cpp                     |  9 +++++++--
+ tests/auto/qsvgrenderer/tst_qsvgrenderer.cpp | 13 +++++++++++++
+ 2 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/src/svg/qsvggraphics.cpp b/src/svg/qsvggraphics.cpp
+index 869569c..5cb216b 100644
+--- a/src/svg/qsvggraphics.cpp
++++ b/src/svg/qsvggraphics.cpp
+@@ -319,8 +319,10 @@ QRectF QSvgText::fastBounds(QPainter *p, QSvgExtraStates &) const
+     QFontMetricsF fm(font);
+ 
+     int charCount = 0;
+-    for (int i = 0; i < m_tspans.size(); ++i)
+-        charCount += m_tspans.at(i)->text().size();
++    for (int i = 0; i < m_tspans.size(); ++i) {
++        if (m_tspans.at(i) != LINEBREAK)
++            charCount += m_tspans.at(i)->text().size();
++    }
+ 
+     QRectF approxMaximumBrect(m_coord.x(),
+                               m_coord.y(),
+@@ -343,6 +345,9 @@ bool QSvgText::precheck(QPainter *p) const
+     qreal originalFontSize = p->font().pointSizeF();
+     qreal maxFontSize = originalFontSize;
+     for (const QSvgTspan *span : std::as_const(m_tspans)) {
++        if (span == LINEBREAK)
++            continue;
++
+         numChars += span->text().size();
+ 
+         QSvgFontStyle *style = static_cast<QSvgFontStyle *>(span->styleProperty(QSvgStyleProperty::FONT));
+diff --git a/tests/auto/qsvgrenderer/tst_qsvgrenderer.cpp b/tests/auto/qsvgrenderer/tst_qsvgrenderer.cpp
+index a11acb8..ec67a2b 100644
+--- a/tests/auto/qsvgrenderer/tst_qsvgrenderer.cpp
++++ b/tests/auto/qsvgrenderer/tst_qsvgrenderer.cpp
+@@ -64,6 +64,7 @@ private slots:
+     void imageRendering();
+     void illegalAnimateTransform_data();
+     void illegalAnimateTransform();
++    void tSpanLineBreak();
+ 
+ #ifndef QT_NO_COMPRESS
+     void testGzLoading();
+@@ -1709,5 +1710,17 @@ void tst_QSvgRenderer::illegalAnimateTransform()
+     QVERIFY(!renderer.load(svg)); // also shouldn't assert
+ }
+ 
++void tst_QSvgRenderer::tSpanLineBreak()
++{
++    QSvgRenderer renderer;
++    QVERIFY(renderer.load(QByteArray("<svg><textArea>Foo<tbreak/>Bar</textArea></svg>")));
++
++    QImage img(50, 50, QImage::Format_ARGB32);
++    {
++        QPainter p(&img);
++        renderer.render(&p); // Don't crash
++    }
++}
++
+ QTEST_MAIN(tst_QSvgRenderer)
+ #include "tst_qsvgrenderer.moc"
+-- 
+2.42.1
+
