@@ -1,4 +1,4 @@
-%define beta beta3
+%define beta rc
 
 Name:		qt6-qtsvg
 Version:	6.10.0
@@ -7,7 +7,7 @@ Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
 Source:		qtsvg-%{?snapshot:%{snapshot}}%{!?snapshot:%{version}}.tar.zst
 %else
-Source:		http://download.qt-project.org/%{?beta:development}%{!?beta:official}_releases/qt/%(echo %{version}|cut -d. -f1-2)/%{version}%{?beta:-%{beta}}/submodules/qtsvg-everywhere-src-%{version}%{?beta:-%{beta}}.tar.xz
+Source:		https://download.qt.io/%{?beta:development}%{!?beta:official}_releases/qt/%(echo %{version}|cut -d. -f1-2)/%{version}%{?beta:-%{beta}}/submodules/qtsvg-everywhere-src-%{version}%{?beta:-%{beta}}.tar.xz
 %endif
 Group:		System/Libraries
 Summary:	Qt %{qtmajor} Tools
@@ -65,5 +65,5 @@ export LD_LIBRARY_PATH="$(pwd)/build/lib:${LD_LIBRARY_PATH}"
 %ninja_install -C build
 %qt6_postinstall
 
-#files examples
-#{_qtdir}/examples
+%files examples
+%{_qtdir}/examples
