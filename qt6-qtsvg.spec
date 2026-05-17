@@ -1,7 +1,7 @@
 #define beta rc
 
 Name:		qt6-qtsvg
-Version:	6.11.0
+Version:	6.11.1
 Release:	%{?beta:0.%{beta}.}%{?snapshot:0.%{snapshot}.}1
 %if 0%{?snapshot:1}
 # "git archive"-d from "dev" branch of git://code.qt.io/qt/qtbase.git
@@ -39,6 +39,9 @@ Qt %{qtmajor} SVG library
 %{_qtdir}/lib/cmake/Qt6Gui/Qt6QSvg*.cmake \
 %{_qtdir}/sbom/*
 
+%define extra_devel_reqprov_SvgWidgets \
+Provides: cmake(Qt6SvgWidgetsPrivate) = %{EVRD}
+
 %qt6libs Svg SvgWidgets
 
 %package examples
@@ -53,6 +56,7 @@ Example code for the Qt 6 SVG module
 %cmake -G Ninja \
 	-DCMAKE_INSTALL_PREFIX=%{_qtdir} \
 	-DQT_BUILD_EXAMPLES:BOOL=ON \
+	-DQT_INSTALL_EXAMPLES_SOURCES:BOOL=ON \
 	-DQT_WILL_INSTALL:BOOL=ON \
 	-DBUILD_WITH_PCH:BOOL=OFF
 
