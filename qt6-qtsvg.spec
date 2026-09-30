@@ -54,6 +54,7 @@ Example code for the Qt 6 SVG module
 %prep
 %autosetup -p1 -n qtsvg%{!?snapshot:-everywhere-src-%{version}%{?beta:-%{beta}}}
 %cmake -G Ninja \
+	-DQT_BUILD_TESTS:BOOL=OFF \
 	-DCMAKE_INSTALL_PREFIX=%{_qtdir} \
 	-DQT_BUILD_EXAMPLES:BOOL=ON \
 	-DQT_INSTALL_EXAMPLES_SOURCES:BOOL=ON \
